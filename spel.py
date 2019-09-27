@@ -11,10 +11,15 @@ import arcade
 import os
 from pyfirmata import Arduino, util
 import time
+import serial
 
+"""SDA -> A4, SCL -> A5"""
+ser = serial.Serial('/dev/cu.usbmodem1411')
 
-"""Arduino stuff"""
-board = Arduino('/dev/cu.usbmodem1411')
+while 1:
+    arduinoData = ser.readline().decode('ascii')
+    print(arduinoData)
+    time.sleep(0.5)
 
 SPRITE_SCALING = 0.2
 SPRITE_NATIVE_SIZE = 128
@@ -198,7 +203,7 @@ class MyGame(arcade.Window):
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
-        board.digital[13].write(1)
+
         if key == arcade.key.UP:
             self.player_sprite.change_y = MOVEMENT_SPEED
         elif key == arcade.key.DOWN:
@@ -211,7 +216,6 @@ class MyGame(arcade.Window):
 
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key. """
-        board.digital[13].write(0)
         if key == arcade.key.UP or key == arcade.key.DOWN:
             self.player_sprite.change_y = 0
         elif key == arcade.key.LEFT or key == arcade.key.RIGHT:
