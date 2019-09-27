@@ -13,17 +13,8 @@ from pyfirmata import Arduino, util
 import time
 
 
-"""Arduino stuff
-board = Arduino("COM3")
-loopTimes = input('How many times would you like the LED to blink: ')
-print("Blinking " + loopTimes + " times.")
-for x in range(int(loopTimes)):
-  board.digital[13].write(1)
-  time.sleep(0.2)
-  board.digital[13].write(0)
-  time.sleep(0.2)
-"""
-
+"""Arduino stuff"""
+board = Arduino('/dev/cu.usbmodem1411')
 
 SPRITE_SCALING = 0.2
 SPRITE_NATIVE_SIZE = 128
@@ -163,7 +154,7 @@ class MyGame(arcade.Window):
     def setup(self):
         """ Set up the game and initialize the variables. """
         # Set up the player
-        self.player_sprite = arcade.Sprite("images/stick.png", SPRITE_SCALING)
+        self.player_sprite = arcade.Sprite("images/stickmanRun.gif", SPRITE_SCALING)
         self.player_sprite.center_x = 600
         self.player_sprite.center_y = 119
         self.player_list = arcade.SpriteList()
@@ -207,7 +198,7 @@ class MyGame(arcade.Window):
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
-
+        board.digital[13].write(1)
         if key == arcade.key.UP:
             self.player_sprite.change_y = MOVEMENT_SPEED
         elif key == arcade.key.DOWN:
@@ -217,9 +208,10 @@ class MyGame(arcade.Window):
         elif key == arcade.key.RIGHT:
             self.player_sprite.change_x = MOVEMENT_SPEED
 
+
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key. """
-
+        board.digital[13].write(0)
         if key == arcade.key.UP or key == arcade.key.DOWN:
             self.player_sprite.change_y = 0
         elif key == arcade.key.LEFT or key == arcade.key.RIGHT:
