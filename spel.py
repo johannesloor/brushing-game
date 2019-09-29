@@ -13,14 +13,38 @@ from pyfirmata import Arduino, util
 import time
 import serial
 
-"""SDA -> A4, SCL -> A5"""
+"""Arduino
+SDA -> A4, SCL -> A5"""
 ser = serial.Serial('/dev/cu.usbmodem1411')
 
-while 1:
-    arduinoData = ser.readline().decode('ascii')
-    print(arduinoData)
-    time.sleep(0.5)
+class ArduinoData:
+    """
+    This class holds all the input from the arduino
+    """
+    def __init__(self):
+        self.acc = ["x", "y", "z"]
+        self.gyr = ["x", "y", "z"]
 
+
+def set_Arduino_data():
+    arduino = ArduinoData()
+
+    for x in range(6):
+        arduinoData = ser.readline().decode("utf-8").strip('\n').strip('\r')
+        try:
+            arduinoData = int(arduinoData)
+
+        except ValueError:
+            print(arduinoData)
+            arduinoData = 0
+
+        if (x < 3):
+            arduino.acc[x] = arduinoData
+        else:
+            arduino.gyr[x-3] = arduinoData
+    return arduino
+
+"""The GAME"""
 SPRITE_SCALING = 0.2
 SPRITE_NATIVE_SIZE = 128
 SPRITE_SIZE = int(SPRITE_NATIVE_SIZE * SPRITE_SCALING)
@@ -83,7 +107,10 @@ def setup_room_1():
 
 
     # If you want coins or monsters in a level, then add that code here.
-
+    wall = arcade.Sprite("images/brick.jpg", SPRITE_SCALING)
+    wall.left = 5 * SPRITE_SIZE
+    wall.bottom = 6 * SPRITE_SIZE
+    room.wall_list.append(wall)
     # Load the background image for this level.
     room.background = arcade.load_texture("images/background.jpg")
 
@@ -156,10 +183,13 @@ class MyGame(arcade.Window):
         self.player_list = None
         self.physics_engine = None
 
+        # Set up arduino data
+        self.arduino_data = None
+
     def setup(self):
         """ Set up the game and initialize the variables. """
         # Set up the player
-        self.player_sprite = arcade.Sprite("images/stickmanRun.gif", SPRITE_SCALING)
+        self.player_sprite = arcade.Sprite("images/stick.png", SPRITE_SCALING)
         self.player_sprite.center_x = 600
         self.player_sprite.center_y = 119
         self.player_list = arcade.SpriteList()
@@ -221,12 +251,35 @@ class MyGame(arcade.Window):
         elif key == arcade.key.LEFT or key == arcade.key.RIGHT:
             self.player_sprite.change_x = 0
 
+    def on_acc_change(self):
+        self.arduino_data = set_Arduino_data()
+        top_value = 10000
+        low_value = -10000
+        # x-axis
+        if self.arduino_data.acc[0] < low_value:
+            self.player_sprite.change_x = -MOVEMENT_SPEED
+        elif self.arduino_data.acc[0] > top_value:
+            self.player_sprite.change_x = MOVEMENT_SPEED
+
+        #y-axis
+        if self.arduino_data.acc[1] < low_value:
+            self.player_sprite.change_y = MOVEMENT_SPEED
+        elif self.arduino_data.acc[1] > top_value:
+            self.player_sprite.change_y = -MOVEMENT_SPEED
+
+        # Stand still
+        if self.arduino_data.acc[0] > low_value and self.arduino_data.acc[0] < top_value:
+            self.player_sprite.change_x = 0
+        if self.arduino_data.acc[1] > low_value and self.arduino_data.acc[1] < top_value:
+            self.player_sprite.change_y = 0
+
     def update(self, delta_time):
         """ Movement and game logic """
 
         # Call update on all sprites (The sprites don't do much in this
         # example though.)
         self.physics_engine.update()
+        self.on_acc_change()
 
         # Do some logic here to figure out what room we are in, and if we need to go
         # to a different room.
