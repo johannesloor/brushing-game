@@ -35,7 +35,6 @@ def set_Arduino_data():
             arduinoData = int(arduinoData)
 
         except ValueError:
-            print(arduinoData)
             arduinoData = 0
 
         if (x < 3):
@@ -53,7 +52,7 @@ SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 700
 SCREEN_TITLE = "Sprite Rooms Example"
 
-MOVEMENT_SPEED = 15
+MOVEMENT_SPEED = 5
 
 
 class Room:
@@ -107,10 +106,11 @@ def setup_room_1():
 
 
     # If you want coins or monsters in a level, then add that code here.
-    wall = arcade.Sprite("images/brick.jpg", SPRITE_SCALING)
-    wall.left = 5 * SPRITE_SIZE
-    wall.bottom = 6 * SPRITE_SIZE
-    room.wall_list.append(wall)
+    """wall = arcade.Sprite("images/brick.jpg", 1)
+    wall.left = 500 # * SPRITE_SIZE
+    wall.bottom = 320 #  * SPRITE_SIZE
+    room.wall_list.append(wall)"""
+
     # Load the background image for this level.
     room.background = arcade.load_texture("images/background.jpg")
 
@@ -253,8 +253,40 @@ class MyGame(arcade.Window):
 
     def on_acc_change(self):
         self.arduino_data = set_Arduino_data()
+        print("x:")
+        print(self.arduino_data.acc[0])
+        print("y:")
+        print(self.arduino_data.acc[1])
+        print("z:")
+        print(self.arduino_data.acc[2])
+
+        """Fixed movement - not done
         top_value = 10000
         low_value = -10000
+
+
+        #y-axis -16000 to 16000
+        if self.arduino_data.acc[1] > 14000:
+            self.player_sprite.change_y = MOVEMENT_SPEED
+        if 10000 < self.arduino_data.acc[1] < 14000:
+            self.player_sprite.change_x = 0
+            self.player_sprite.change_y = -MOVEMENT_SPEED
+        if 0 < self.arduino_data.acc[1] < 10000:
+            self.player_sprite.change_y = 0
+            self.player_sprite.change_x = MOVEMENT_SPEED
+        if -10000 < self.arduino_data.acc[1] < 0:
+            self.player_sprite.change_y = 0
+            self.player_sprite.change_x = -MOVEMENT_SPEED
+        if -10000 < self.arduino_data.acc[1] < -14000:
+            self.player_sprite.change_x = 0
+            self.player_sprite.change_y = -MOVEMENT_SPEED
+        if self.arduino_data.acc[1] < -14000:
+            self.player_sprite.change_y = MOVEMENT_SPEED
+        """
+
+        """Free movement"""
+        top_value = 2000
+        low_value = -2000
         # x-axis
         if self.arduino_data.acc[0] < low_value:
             self.player_sprite.change_x = -MOVEMENT_SPEED
@@ -263,9 +295,9 @@ class MyGame(arcade.Window):
 
         #y-axis
         if self.arduino_data.acc[1] < low_value:
-            self.player_sprite.change_y = MOVEMENT_SPEED
-        elif self.arduino_data.acc[1] > top_value:
             self.player_sprite.change_y = -MOVEMENT_SPEED
+        elif self.arduino_data.acc[1] > top_value:
+            self.player_sprite.change_y = MOVEMENT_SPEED
 
         # Stand still
         if self.arduino_data.acc[0] > low_value and self.arduino_data.acc[0] < top_value:
