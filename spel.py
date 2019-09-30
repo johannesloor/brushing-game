@@ -179,7 +179,7 @@ class MyGame(arcade.Window):
         top_value = 10000
         low_value = -10000
         self.timer += 1
-        print(self.timer)
+        #print(self.timer)
         if self.timer == 30:
             self.player_sprite.turn_left()
             self.timer = 0

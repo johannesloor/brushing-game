@@ -18,10 +18,9 @@ def set_Arduino_data():
     arduino = ArduinoData()
 
     for x in range(6):
-        arduinoData = ser.readline().decode("utf-8").strip('\n').strip('\r')
+        arduinoData = ser.readline().decode("utf-8").strip('\n').strip('\r')        
         try:
             arduinoData = int(arduinoData)
-
         except ValueError:
             arduinoData = 0
 
