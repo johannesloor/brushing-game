@@ -1,59 +1,20 @@
-"""
-Sprite move between different rooms.
-
-Artwork from http://kenney.nl
-
-If Python and Arcade are installed, this example can be run from the command line with:
-python -m arcade.examples.sprite_rooms
-"""
-
 import arcade
 import os
-from pyfirmata import Arduino, util
 import time
-import serial
-
-"""Arduino
-SDA -> A4, SCL -> A5"""
-ser = serial.Serial('/dev/cu.usbmodem1421')
-
-class ArduinoData:
-    """
-    This class holds all the input from the arduino
-    """
-    def __init__(self):
-        self.acc = ["x", "y", "z"]
-        self.gyr = ["x", "y", "z"]
+import arduino
 
 
-def set_Arduino_data():
-    arduino = ArduinoData()
-
-    for x in range(6):
-        arduinoData = ser.readline().decode("utf-8").strip('\n').strip('\r')
-        try:
-            arduinoData = int(arduinoData)
-
-        except ValueError:
-            arduinoData = 0
-
-        if (x < 3):
-            arduino.gyr[x] = arduinoData
-        else:
-            arduino.acc[x-3] = arduinoData
-    return arduino
-
-"""The GAME"""
 SPRITE_SCALING = 0.1
 SPRITE_NATIVE_SIZE = 128
 SPRITE_SIZE = int(SPRITE_NATIVE_SIZE * SPRITE_SCALING)
 
 SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 700
-SCREEN_TITLE = "Sprite Rooms Example"
+SCREEN_TITLE = "BRUSHI"
 
 MOVEMENT_SPEED = 15
-
+TEXTURE_LEFT = 0
+TEXTURE_RIGHT = 1
 
 class Room:
     """
@@ -80,30 +41,6 @@ def setup_room_1():
     """ Set up the game and initialize the variables. """
     # Sprite lists
     room.wall_list = arcade.SpriteList()
-    """
-    # -- Set up the walls
-    # Create bottom and top row of boxes
-    # This y loops a list of two, the coordinate 0, and just under the top of window
-    for y in (0, SCREEN_HEIGHT - SPRITE_SIZE):
-        # Loop for each box going across
-        for x in range(0, SCREEN_WIDTH, SPRITE_SIZE):
-            wall = arcade.Sprite("images/brick.jpg", SPRITE_SCALING)
-            wall.left = x
-            wall.bottom = y
-            room.wall_list.append(wall)
-
-    # Create left and right column of boxes
-    for x in (0, SCREEN_WIDTH - SPRITE_SIZE):
-        # Loop for each box going across
-        for y in range(SPRITE_SIZE, SCREEN_HEIGHT - SPRITE_SIZE, SPRITE_SIZE):
-            # Skip making a block 4 and 5 blocks up on the right side
-            if x == 0:
-                wall = arcade.Sprite("images/brick.jpg", 0.1)
-                wall.left = x
-                wall.bottom = y
-                room.wall_list.append(wall)
-    """
-
 
     # If you want coins or monsters in a level, then add that code here.
     """wall = arcade.Sprite("images/brick.jpg", 1)
@@ -116,49 +53,6 @@ def setup_room_1():
 
     return room
 
-
-def setup_room_2():
-    """
-    Create and return room 2.
-    """
-    room = Room()
-
-    """ Set up the game and initialize the variables. """
-    # Sprite lists
-    room.wall_list = arcade.SpriteList()
-
-    # -- Set up the walls
-    # Create bottom and top row of boxes
-    # This y loops a list of two, the coordinate 0, and just under the top of window
-    for y in (0, SCREEN_HEIGHT - SPRITE_SIZE):
-        # Loop for each box going across
-        for x in range(0, SCREEN_WIDTH, SPRITE_SIZE):
-            wall = arcade.Sprite("images/brick.jpg", SPRITE_SCALING)
-            wall.left = x
-            wall.bottom = y
-            room.wall_list.append(wall)
-
-    # Create left and right column of boxes
-    for x in (0, SCREEN_WIDTH - SPRITE_SIZE):
-        # Loop for each box going across
-        for y in range(SPRITE_SIZE, SCREEN_HEIGHT - SPRITE_SIZE, SPRITE_SIZE):
-            # Skip making a block 4 and 5 blocks up
-            if x != 0:
-                wall = arcade.Sprite("images/brick.jpg", SPRITE_SCALING)
-                wall.left = x
-                wall.bottom = y
-                room.wall_list.append(wall)
-
-    wall = arcade.Sprite("images/brick.jpg", SPRITE_SCALING)
-    wall.left = 5 * SPRITE_SIZE
-    wall.bottom = 6 * SPRITE_SIZE
-    room.wall_list.append(wall)
-    room.background = arcade.load_texture("images/background2.jpg")
-
-    return room
-
-TEXTURE_LEFT = 0
-TEXTURE_RIGHT = 1
 class Player(arcade.Sprite):
 
     def __init__(self):
@@ -173,6 +67,7 @@ class Player(arcade.Sprite):
 
         # By default, face right.
         self.set_texture(TEXTURE_RIGHT)
+
 class MyGame(arcade.Window):
     """ Main application class. """
 
@@ -216,9 +111,6 @@ class MyGame(arcade.Window):
 
         # Create the rooms. Extend the pattern for each room.
         room = setup_room_1()
-        self.rooms.append(room)
-
-        room = setup_room_2()
         self.rooms.append(room)
 
         # Our starting room number
@@ -268,7 +160,7 @@ class MyGame(arcade.Window):
             self.player_sprite.change_x = 0
 
     def on_acc_change(self):
-        self.arduino_data = set_Arduino_data()
+        self.arduino_data = arduino.set_Arduino_data()
         x_gyr = self.arduino_data.gyr[0]
         y_gyr = self.arduino_data.gyr[1]
         z_gyr = self.arduino_data.gyr[2]
@@ -283,13 +175,13 @@ class MyGame(arcade.Window):
         #print("z:")
         #print(z_gyr)
 
-        """Fixed movement - not done"""
+        """Fixed movement"""
         top_value = 10000
         low_value = -10000
         self.timer += 1
         print(self.timer)
         if self.timer == 30:
-            self.player_sprite.set_texture(TEXTURE_LEFT)
+            self.player_sprite.turn_left()
             self.timer = 0
         #y-axis -16000 to 16000
         if y_gyr > 9000:
