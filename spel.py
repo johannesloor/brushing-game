@@ -2,7 +2,9 @@ import arcade
 import os
 import time
 import random
-#import arduino
+use_arduino = False
+if use_arduino:
+    import arduino
 
 
 SPRITE_SCALING = 0.1
@@ -300,7 +302,9 @@ class MyGame(arcade.Window):
         # Call update on all sprites (The sprites don't do much in this
         # example though.)
         self.physics_engine.update()
-        #self.on_acc_change()
+        if use_arduino:
+            self.on_acc_change()
+        
         if self.player_sprite.center_x == 300:
             self.remove_dirt("left")
         elif self.player_sprite.center_x == SCREEN_WIDTH/2:
