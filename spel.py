@@ -9,7 +9,7 @@ SPRITE_SCALING = 0.1
 SPRITE_NATIVE_SIZE = 128
 SPRITE_SIZE = int(SPRITE_NATIVE_SIZE * SPRITE_SCALING)
 
-DIRT_COUNT = 500
+DIRT_COUNT = 70
 SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 700
 SCREEN_TITLE = "BRUSHI"
@@ -86,11 +86,16 @@ class MyGame(arcade.Window):
         file_path = os.path.dirname(os.path.abspath(__file__))
         os.chdir(file_path)
 
-        self.frame_count = 0
-
         # Sprite lists
         self.current_room = 0
-        self.dirt_list = None
+        self.dirt_left_list = None
+        self.dirt_center_list = None
+        self.dirt_right_list = None
+
+        #Timer
+        self.left_timer = 0
+        self.center_timer = 0
+        self.right_timer = 0
 
         # Set up the player
         self.rooms = None
@@ -111,20 +116,34 @@ class MyGame(arcade.Window):
         self.player_list.append(self.player_sprite)
 
         #Set up dirts
-        self.dirt_list = arcade.SpriteList()
+        self.dirt_left_list = arcade.SpriteList()
+        self.dirt_center_list = arcade.SpriteList()
+        self.dirt_right_list = arcade.SpriteList()
+
         # Create the dirts
         for i in range(DIRT_COUNT):
 
             # Create the coin instance
             # Coin image from kenney.nl
-            dirt = arcade.Sprite("images/stick.png", SPRITE_SCALING)
+            dirt_left = arcade.Sprite("images/apple.png", SPRITE_SCALING)
+            dirt_center_list = arcade.Sprite("images/apple.png", SPRITE_SCALING)
+            dirt_right_list = arcade.Sprite("images/apple.png", SPRITE_SCALING)
 
             # Position the coin
-            dirt.center_x = random.randrange(450, 550)
-            dirt.center_y = random.randrange(350, SCREEN_HEIGHT-30)
+            dirt_left.center_x = random.randrange(420, 550)
+            dirt_left.center_y = random.randrange(400, SCREEN_HEIGHT-20)
+
+            dirt_center_list.center_x = random.randrange(450, 850)
+            dirt_center_list.center_y = random.randrange(300, 400)
+
+            dirt_right_list.center_x = random.randrange(720, 850)
+            dirt_right_list.center_y = random.randrange(400, SCREEN_HEIGHT-20)
 
             # Add the coin to the lists
-            self.dirt_list.append(dirt)
+            self.dirt_left_list.append(dirt_left)
+            self.dirt_center_list.append(dirt_center_list)
+            self.dirt_right_list.append(dirt_right_list)
+
         # Our list of rooms
         self.rooms = []
 
@@ -157,7 +176,14 @@ class MyGame(arcade.Window):
         # above for each list.
 
         self.player_list.draw()
-        self.dirt_list.draw()
+        self.dirt_left_list.draw()
+        self.dirt_center_list.draw()
+        self.dirt_right_list.draw()
+
+        if not self.dirt_left_list and not self.dirt_center_list and not self.dirt_right_list:
+            start_x = (SCREEN_WIDTH/2) - 80
+            start_y = 550
+            arcade.draw_text("Good boi!", start_x, start_y, arcade.color.RED, 50)
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
@@ -187,14 +213,31 @@ class MyGame(arcade.Window):
         elif key == arcade.key.LEFT or key == arcade.key.RIGHT:
             self.player_sprite.change_x = 0
 
-    def add_to_timer(self):
-        self.frame_count += 1
-        print(self.frame_count)
+    def add_to_timer(self, direction):
+        if direction == "left":
+            self.left_timer += 1
+        elif direction == "center":
+            self.center_timer += 1
+        elif direction == "right":
+            self.right_timer += 1
 
-    def remove_dirt(self):
-        if self.frame_count == 1200//DIRT_COUNT and self.dirt_list: #About 30sek
-            self.dirt_list[0].kill()
-            self.frame_count = 0
+    def remove_dirt(self, direction):
+        self.add_to_timer(direction)
+        remove_dirt_frame = 400//DIRT_COUNT #About 10s total
+        if direction == "left":
+            if self.left_timer == remove_dirt_frame and self.dirt_left_list:
+                self.dirt_left_list[0].kill()
+                self.left_timer = 0
+
+        if direction == "center":
+            if self.center_timer == remove_dirt_frame and self.dirt_center_list:
+                self.dirt_center_list[0].kill()
+                self.center_timer = 0
+
+        if direction == "right":
+            if self.right_timer == remove_dirt_frame and self.dirt_right_list:
+                self.dirt_right_list[0].kill()
+                self.right_timer = 0
 
     def on_acc_change(self):
         self.arduino_data = arduino.set_Arduino_data()
@@ -259,8 +302,13 @@ class MyGame(arcade.Window):
         self.physics_engine.update()
         #self.on_acc_change()
         if self.player_sprite.center_x == 300:
-            self.add_to_timer()
-            self.remove_dirt()
+            self.remove_dirt("left")
+        elif self.player_sprite.center_x == SCREEN_WIDTH/2:
+            self.remove_dirt("center")
+        elif self.player_sprite.center_x == 1000:
+            self.remove_dirt("right")
+
+
         # Do some logic here to figure out what room we are in, and if we need to go
         # to a different room.
         if self.player_sprite.center_x > SCREEN_WIDTH and self.current_room == 0:
