@@ -104,18 +104,25 @@ class MyGame(arcade.Window):
         self.player_sprite = None
         self.player_list = None
         self.physics_engine = None
+        self.position_center_x = 550
+        self.position_center_y = 160
+        self.position_left_x = 200
+        self.position_right_x = 900
+        self.position_lr_y = SCREEN_HEIGHT*0.7
 
         # Set up arduino data
         self.arduino_data = None
-        self.gyr_Y_list = []
+        self.acc_Y_list = []
         self.start_game = False
+        self.shake_value = 0
+        self.shake_value_list = [0]
 
     def setup(self):
         """ Set up the game and initialize the variables. """
         # Set up the player
         self.player_sprite = Player()
-        self.player_sprite.center_x = 600
-        self.player_sprite.center_y = 119
+        self.player_sprite.center_x = self.position_center_x
+        self.player_sprite.center_y = self.position_center_y
         self.player_list = arcade.SpriteList()
         self.player_list.append(self.player_sprite)
 
@@ -134,13 +141,13 @@ class MyGame(arcade.Window):
             dirt_right_list = arcade.Sprite("images/apple.png", SPRITE_SCALING)
 
             # Position the coin
-            dirt_left.center_x = random.randrange(420, 550)
+            dirt_left.center_x = random.randrange(350, 480)
             dirt_left.center_y = random.randrange(400, SCREEN_HEIGHT-20)
 
-            dirt_center_list.center_x = random.randrange(450, 850)
+            dirt_center_list.center_x = random.randrange(370, 730)
             dirt_center_list.center_y = random.randrange(300, 400)
 
-            dirt_right_list.center_x = random.randrange(720, 850)
+            dirt_right_list.center_x = random.randrange(620, 770)
             dirt_right_list.center_y = random.randrange(400, SCREEN_HEIGHT-20)
 
             # Add the coin to the lists
@@ -185,9 +192,9 @@ class MyGame(arcade.Window):
         self.dirt_right_list.draw()
 
         if not self.dirt_left_list and not self.dirt_center_list and not self.dirt_right_list:
-            start_x = (SCREEN_WIDTH/2) - 80
+            start_x = 440
             start_y = 550
-            arcade.draw_text("Good boi!", start_x, start_y, arcade.color.RED, 50)
+            arcade.draw_text("All clean!", start_x, start_y, arcade.color.BLACK, 50)
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
@@ -201,17 +208,17 @@ class MyGame(arcade.Window):
             if key == arcade.key.UP:
                 self.player_sprite.change_y = 0
             elif key == arcade.key.DOWN:
-                self.player_sprite.center_x = SCREEN_WIDTH/2
-                self.player_sprite.center_y = 180
+                self.player_sprite.center_x = self.position_center_x
+                self.player_sprite.center_y = self.position_center_y
                 #self.player_sprite.change_y = -MOVEMENT_SPEED
             elif key == arcade.key.LEFT:
-                self.player_sprite.center_x = 300
-                self.player_sprite.center_y = SCREEN_HEIGHT*0.7
+                self.player_sprite.center_x = self.position_left_x
+                self.player_sprite.center_y = self.position_lr_y
                 self.player_sprite.set_texture(TEXTURE_LEFT)
                 #self.player_sprite.change_x = -MOVEMENT_SPEED
             elif key == arcade.key.RIGHT:
-                self.player_sprite.center_x = 1000
-                self.player_sprite.center_y = SCREEN_HEIGHT*0.7
+                self.player_sprite.center_x = self.position_right_x
+                self.player_sprite.center_y = self.position_lr_y
                 self.player_sprite.set_texture(TEXTURE_RIGHT)
                 #self.player_sprite.change_x = MOVEMENT_SPEED
 
@@ -241,7 +248,7 @@ class MyGame(arcade.Window):
 
     def remove_dirt(self, direction):
         self.add_to_timer(direction)
-        remove_dirt_frame = 300//DIRT_COUNT #About 10s total
+        remove_dirt_frame = 160//DIRT_COUNT #About 10s total
         timers = [self.left_timer, self.center_timer, self.right_timer]
         lists = [self.dirt_left_list, self.dirt_center_list, self.dirt_right_list]
         for x in range(len(timers)):
@@ -256,6 +263,12 @@ class MyGame(arcade.Window):
                     if lists[x][0].center_y > SCREEN_HEIGHT:
                         lists[x][0].kill()"""
 
+    def get_avg(self, list):
+        total = 0
+        for y in list:
+            total += y
+        avg = total//len(list)
+        return avg
 
     def on_acc_change(self):
         self.arduino_data = arduino.set_Arduino_data()
@@ -272,31 +285,35 @@ class MyGame(arcade.Window):
         #print(y_gyr)
         #print("z:")
         #print(z_gyr)
-        if not self.gyr_Y_list:
-            self.gyr_Y_list.append(y_gyr)
+        if not self.acc_Y_list:
+            self.acc_Y_list.append(y_acc)
         else:
-            self.gyr_Y_list.insert(0, y_gyr)
-            if len(self.gyr_Y_list) > 20:
-                self.gyr_Y_list.pop(-1)
+            self.acc_Y_list.insert(0, y_acc)
+            if len(self.acc_Y_list) > 20:
+                self.acc_Y_list.pop(-1)
+        acc_Y_avg = self.get_avg(self.acc_Y_list)
 
-        total = 0
-        for y in self.gyr_Y_list:
-            total += y
-        avg = total//len(self.gyr_Y_list)
+        self.shake_value_list.insert(0, x_gyr)
+        if len(self.shake_value_list) > 20:
+            self.shake_value_list.pop(-1)
+
+        self.shake_value = self.get_avg(self.shake_value_list)
+        print(self.shake_value)
 
         """Fixed movement"""
         #y-axis -16000 to 16000
-        if avg > 10000:
-            self.player_sprite.center_x = 300
-            self.player_sprite.center_y = SCREEN_HEIGHT*0.7
+        if acc_Y_avg > 10000:
+            self.player_sprite.center_x = self.position_left_x
+            self.player_sprite.center_y = self.position_lr_y
             self.player_sprite.set_texture(TEXTURE_LEFT)
-        elif -5000 < avg < 5000:
-            self.player_sprite.center_x = SCREEN_WIDTH/2
-            self.player_sprite.center_y = 180
-        elif avg < -10000:
-            self.player_sprite.center_x = 1000
-            self.player_sprite.center_y = SCREEN_HEIGHT*0.7
+        elif -5000 < acc_Y_avg < 5000:
+            self.player_sprite.center_x = self.position_center_x
+            self.player_sprite.center_y = self.position_center_y
+        elif acc_Y_avg < -10000:
+            self.player_sprite.center_x = self.position_right_x
+            self.player_sprite.center_y = self.position_lr_y
             self.player_sprite.set_texture(TEXTURE_RIGHT)
+
 
 
 
@@ -331,12 +348,13 @@ class MyGame(arcade.Window):
             if use_arduino:
                 self.on_acc_change()
 
-            if self.player_sprite.center_x == 300:
-                self.remove_dirt("left")
-            elif self.player_sprite.center_x == SCREEN_WIDTH/2:
-                self.remove_dirt("center")
-            elif self.player_sprite.center_x == 1000:
-                self.remove_dirt("right")
+            if not 550 < self.shake_value < 750:
+                if self.player_sprite.center_x == self.position_left_x:
+                    self.remove_dirt("left")
+                elif self.player_sprite.center_x == self.position_center_x:
+                    self.remove_dirt("center")
+                elif self.player_sprite.center_x == self.position_right_x:
+                    self.remove_dirt("right")
 
 
             # Do some logic here to figure out what room we are in, and if we need to go
