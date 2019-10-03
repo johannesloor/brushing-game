@@ -3,7 +3,7 @@ import os
 import time
 import random
 
-use_arduino = False
+use_arduino = True
 if use_arduino:
     import arduino
 
@@ -107,7 +107,7 @@ class MyGame(arcade.Window):
 
         # Set up arduino data
         self.arduino_data = None
-
+        self.gyr_Y_list = []
         self.start_game = False
 
     def setup(self):
@@ -196,7 +196,7 @@ class MyGame(arcade.Window):
                 self.start_game = False
             else:
                 self.start_game = True
-        
+
         if self.start_game:
             if key == arcade.key.UP:
                 self.player_sprite.change_y = 0
@@ -241,7 +241,7 @@ class MyGame(arcade.Window):
 
     def remove_dirt(self, direction):
         self.add_to_timer(direction)
-        remove_dirt_frame = 400//DIRT_COUNT #About 10s total
+        remove_dirt_frame = 300//DIRT_COUNT #About 10s total
         timers = [self.left_timer, self.center_timer, self.right_timer]
         lists = [self.dirt_left_list, self.dirt_center_list, self.dirt_right_list]
         for x in range(len(timers)):
@@ -272,17 +272,28 @@ class MyGame(arcade.Window):
         #print(y_gyr)
         #print("z:")
         #print(z_gyr)
+        if not self.gyr_Y_list:
+            self.gyr_Y_list.append(y_gyr)
+        else:
+            self.gyr_Y_list.insert(0, y_gyr)
+            if len(self.gyr_Y_list) > 20:
+                self.gyr_Y_list.pop(-1)
+
+        total = 0
+        for y in self.gyr_Y_list:
+            total += y
+        avg = total//len(self.gyr_Y_list)
 
         """Fixed movement"""
         #y-axis -16000 to 16000
-        if y_gyr > 9000:
+        if avg > 10000:
             self.player_sprite.center_x = 300
             self.player_sprite.center_y = SCREEN_HEIGHT*0.7
             self.player_sprite.set_texture(TEXTURE_LEFT)
-        elif -9000 < y_gyr < 9000:
+        elif -5000 < avg < 5000:
             self.player_sprite.center_x = SCREEN_WIDTH/2
             self.player_sprite.center_y = 180
-        elif y_gyr < -9000:
+        elif avg < -10000:
             self.player_sprite.center_x = 1000
             self.player_sprite.center_y = SCREEN_HEIGHT*0.7
             self.player_sprite.set_texture(TEXTURE_RIGHT)

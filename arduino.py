@@ -3,7 +3,7 @@ from pyfirmata import Arduino, util
 
 """Arduino
 SDA -> A4, SCL -> A5"""
-ser = serial.Serial('/dev/cu.usbmodem1411')
+ser = serial.Serial('/dev/cu.usbmodem1421')
 
 class ArduinoData:
     """
@@ -18,7 +18,7 @@ def set_Arduino_data():
     arduino = ArduinoData()
 
     for x in range(6):
-        arduinoData = ser.readline().decode("utf-8").strip('\n').strip('\r')        
+        arduinoData = ser.readline().decode("utf-8").strip('\n').strip('\r')
         try:
             arduinoData = int(arduinoData)
         except ValueError:
