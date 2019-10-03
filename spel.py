@@ -11,12 +11,12 @@ SPRITE_SCALING = 0.1
 SPRITE_NATIVE_SIZE = 128
 SPRITE_SIZE = int(SPRITE_NATIVE_SIZE * SPRITE_SCALING)
 
-DIRT_COUNT = 70
+DIRT_COUNT = 50
 SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 700
 SCREEN_TITLE = "BRUSHI"
 
-MOVEMENT_SPEED = 15
+MOVEMENT_SPEED = 20
 TEXTURE_LEFT = 0
 TEXTURE_RIGHT = 1
 
@@ -108,6 +108,8 @@ class MyGame(arcade.Window):
         # Set up arduino data
         self.arduino_data = None
 
+        self.start_game = False
+
     def setup(self):
         """ Set up the game and initialize the variables. """
         # Set up the player
@@ -189,23 +191,29 @@ class MyGame(arcade.Window):
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
-
-        if key == arcade.key.UP:
-            self.player_sprite.change_y = 0
-        elif key == arcade.key.DOWN:
-            self.player_sprite.center_x = SCREEN_WIDTH/2
-            self.player_sprite.center_y = 180
-            #self.player_sprite.change_y = -MOVEMENT_SPEED
-        elif key == arcade.key.LEFT:
-            self.player_sprite.center_x = 300
-            self.player_sprite.center_y = SCREEN_HEIGHT*0.7
-            self.player_sprite.set_texture(TEXTURE_LEFT)
-            #self.player_sprite.change_x = -MOVEMENT_SPEED
-        elif key == arcade.key.RIGHT:
-            self.player_sprite.center_x = 1000
-            self.player_sprite.center_y = SCREEN_HEIGHT*0.7
-            self.player_sprite.set_texture(TEXTURE_RIGHT)
-            #self.player_sprite.change_x = MOVEMENT_SPEED
+        if key == arcade.key.SPACE:
+            if self.start_game:
+                self.start_game = False
+            else:
+                self.start_game = True
+        
+        if self.start_game:
+            if key == arcade.key.UP:
+                self.player_sprite.change_y = 0
+            elif key == arcade.key.DOWN:
+                self.player_sprite.center_x = SCREEN_WIDTH/2
+                self.player_sprite.center_y = 180
+                #self.player_sprite.change_y = -MOVEMENT_SPEED
+            elif key == arcade.key.LEFT:
+                self.player_sprite.center_x = 300
+                self.player_sprite.center_y = SCREEN_HEIGHT*0.7
+                self.player_sprite.set_texture(TEXTURE_LEFT)
+                #self.player_sprite.change_x = -MOVEMENT_SPEED
+            elif key == arcade.key.RIGHT:
+                self.player_sprite.center_x = 1000
+                self.player_sprite.center_y = SCREEN_HEIGHT*0.7
+                self.player_sprite.set_texture(TEXTURE_RIGHT)
+                #self.player_sprite.change_x = MOVEMENT_SPEED
 
 
     def on_key_release(self, key, modifiers):
@@ -223,23 +231,31 @@ class MyGame(arcade.Window):
         elif direction == "right":
             self.right_timer += 1
 
+    def reset_timer(self, direction):
+        if direction == "left":
+            self.left_timer = 0
+        elif direction == "center":
+            self.center_timer = 0
+        elif direction == "right":
+            self.right_timer = 0
+
     def remove_dirt(self, direction):
         self.add_to_timer(direction)
         remove_dirt_frame = 400//DIRT_COUNT #About 10s total
-        if direction == "left":
-            if self.left_timer == remove_dirt_frame and self.dirt_left_list:
-                self.dirt_left_list[0].kill()
-                self.left_timer = 0
+        timers = [self.left_timer, self.center_timer, self.right_timer]
+        lists = [self.dirt_left_list, self.dirt_center_list, self.dirt_right_list]
+        for x in range(len(timers)):
+            if lists[x]:
+                if timers[x] == remove_dirt_frame:
+                    self.reset_timer(direction)
+                    lists[x][0].kill()
+                    """
+                    lists[x][0].center_y += MOVEMENT_SPEED
+                    if lists[x][0].center_y > SCREEN_HEIGHT-200 and len(lists[x]) > 1:
+                        lists[x][1].center_y += MOVEMENT_SPEED
+                    if lists[x][0].center_y > SCREEN_HEIGHT:
+                        lists[x][0].kill()"""
 
-        if direction == "center":
-            if self.center_timer == remove_dirt_frame and self.dirt_center_list:
-                self.dirt_center_list[0].kill()
-                self.center_timer = 0
-
-        if direction == "right":
-            if self.right_timer == remove_dirt_frame and self.dirt_right_list:
-                self.dirt_right_list[0].kill()
-                self.right_timer = 0
 
     def on_acc_change(self):
         self.arduino_data = arduino.set_Arduino_data()
@@ -258,8 +274,6 @@ class MyGame(arcade.Window):
         #print(z_gyr)
 
         """Fixed movement"""
-
-
         #y-axis -16000 to 16000
         if y_gyr > 9000:
             self.player_sprite.center_x = 300
@@ -301,30 +315,31 @@ class MyGame(arcade.Window):
 
         # Call update on all sprites (The sprites don't do much in this
         # example though.)
-        self.physics_engine.update()
-        if use_arduino:
-            self.on_acc_change()
+        if self.start_game:
+            self.physics_engine.update()
+            if use_arduino:
+                self.on_acc_change()
 
-        if self.player_sprite.center_x == 300:
-            self.remove_dirt("left")
-        elif self.player_sprite.center_x == SCREEN_WIDTH/2:
-            self.remove_dirt("center")
-        elif self.player_sprite.center_x == 1000:
-            self.remove_dirt("right")
+            if self.player_sprite.center_x == 300:
+                self.remove_dirt("left")
+            elif self.player_sprite.center_x == SCREEN_WIDTH/2:
+                self.remove_dirt("center")
+            elif self.player_sprite.center_x == 1000:
+                self.remove_dirt("right")
 
 
-        # Do some logic here to figure out what room we are in, and if we need to go
-        # to a different room.
-        if self.player_sprite.center_x > SCREEN_WIDTH and self.current_room == 0:
-            self.current_room = 1
-            self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite,
-                                                             self.rooms[self.current_room].wall_list)
-            self.player_sprite.center_x = 0
-        elif self.player_sprite.center_x < 0 and self.current_room == 1:
-            self.current_room = 0
-            self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite,
-                                                             self.rooms[self.current_room].wall_list)
-            self.player_sprite.center_x = SCREEN_WIDTH
+            # Do some logic here to figure out what room we are in, and if we need to go
+            # to a different room.
+            if self.player_sprite.center_x > SCREEN_WIDTH and self.current_room == 0:
+                self.current_room = 1
+                self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite,
+                                                                 self.rooms[self.current_room].wall_list)
+                self.player_sprite.center_x = 0
+            elif self.player_sprite.center_x < 0 and self.current_room == 1:
+                self.current_room = 0
+                self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite,
+                                                                 self.rooms[self.current_room].wall_list)
+                self.player_sprite.center_x = SCREEN_WIDTH
 
 
 def main():
