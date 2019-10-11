@@ -3,7 +3,7 @@ import os
 import time
 import random
 
-use_arduino = True
+use_arduino = False
 if use_arduino:
     import arduino
 
@@ -99,6 +99,8 @@ class Player(arcade.Sprite):
         self.textures.append(texture)
         texture = arcade.load_texture("images/fairy.png", scale=SPRITE_SCALING)
         self.textures.append(texture)
+        texture = arcade.load_texture("images/stick.png", scale=SPRITE_SCALING)
+        self.textures.append(texture)
 
         # By default, face right.
         self.set_texture(TEXTURE_RIGHT)
@@ -153,18 +155,16 @@ class MyGame(arcade.Window):
 
         self.view_bottom = 0
         self.view_left = 0
+        self.test = 0
 
     def setup(self):
         """ Set up the game and initialize the variables. """
         # Set up the player
+        self.player_list = arcade.SpriteList()
         self.player_sprite = Player()
         self.player_sprite.center_x = self.position_center_x
         self.player_sprite.center_y = self.position_center_y
-        self.player_list = arcade.SpriteList()
         self.player_list.append(self.player_sprite)
-
-
-
         # Our list of rooms
         self.rooms = []
 
@@ -213,6 +213,7 @@ class MyGame(arcade.Window):
             arcade.draw_text("All clean!", start_x, start_y, arcade.color.BLACK, 50)
 
         # Draw player
+
         self.player_list.draw()
 
     def on_key_press(self, key, modifiers):
@@ -241,7 +242,7 @@ class MyGame(arcade.Window):
 
                 self.player_sprite.center_x = self.position_left_x
                 self.player_sprite.center_y = self.position_lr_y
-                self.player_sprite.set_texture(TEXTURE_LEFT)
+                self.player_sprite.set_texture(2)
                 #self.player_sprite.change_x = -MOVEMENT_SPEED
             elif key == arcade.key.RIGHT:
                 self.player_sprite.center_x = self.position_right_x
@@ -384,11 +385,17 @@ class MyGame(arcade.Window):
     def update(self, delta_time):
         """ Movement and game logic """
         if self.start_game:
+
+            self.player_sprite.set_texture(self.test)
+            if self.test == 2:
+                self.test = 0
+            else:
+                self.test += 1
             self.physics_engine.update()
             if use_arduino:
                 self.on_acc_change()
 
-            if not 150 < self.shake_value < 450 and self.get_avg(self.acc_X_list) > 0:
+            if not 150 < self.shake_value < 450:
                 if self.player_sprite.center_x == self.position_left_x:
                     self.remove_dirt("left")
                 elif self.player_sprite.center_x == self.position_center_x:
