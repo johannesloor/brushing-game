@@ -142,6 +142,7 @@ class MyGame(arcade.Window):
         #Animation
         self.frame_timer = 0
         self.texture_choice = 1
+        self.test = 0
 
 
     def setup(self):
@@ -388,7 +389,7 @@ class MyGame(arcade.Window):
         self.player.set_texture(self.texture_choice)
 
     def animate_player(self):
-        animation_framerate = 6
+        animation_framerate = 4
         animation_list = [0, animation_framerate, animation_framerate * 2, animation_framerate * 3]
         for frame in animation_list:
             if self.frame_timer == frame:
@@ -410,54 +411,96 @@ class MyGame(arcade.Window):
         center_dirt = self.rooms[self.current_room].dirt_center_list
 
         if not left_dirt and not right_dirt and not center_dirt:
+
             self.start_game = False
-            self.player.set_texture(0)
             self.reset_timer('left')
             self.reset_timer('right')
             self.reset_timer('center')
-            self.player.change_y = speed
-
-            if self.player.center_y < - 150 or self.player.center_y > SCREEN_HEIGHT + 150:
-                self.player.change_y = -speed
+            if next_level == 2:
+                self.player.change_x = speed
+            else:
+                self.player.change_y = speed
+            if self.player.center_y < - 150 or self.player.center_y > SCREEN_HEIGHT + 150 or self.player.center_x > SCREEN_WIDTH + 150:
+                #self.player.change_y = 0
                 self.current_room = next_level
-                self.player.center_x = self.position_center_x
 
     def check_if_change_level(self):
+
         if self.current_room == 0:
-            self.switch_level(1, 10)
+            self.switch_level(1, -8)
 
         elif self.current_room == 1:
+            if not self.start_game:
+                if self.player.center_x < self.position_center_x -3:
+                    self.player.change_x = 8
+                elif self.player.center_x > self.position_center_x +3:
+                    self.player.change_x = -8
+                else:
+                    self.player.change_x = 0
 
-            if not self.start_game and self.player.center_y < self.position_center_y:
-                self.player.change_y = 0
-                self.start_game = True
-            else:
-                self.switch_level(2, 10)
+                if self.player.center_y < - 150:
+                    self.player.center_y = SCREEN_HEIGHT + 151
+                    #self.player.change_y = -8
+
+                if self.player.center_y < self.position_lr_y:
+                    self.player.change_y = 0
+                    center_y = self.position_center_y
+                    lr_y = self.position_lr_y
+                    self.position_center_y = lr_y
+                    self.position_lr_y = center_y
+                    self.start_game = True
+
+            self.switch_level(2, 8)
 
         elif self.current_room == 2:
-            center_y = self.position_center_y
-            lr_y = self.position_lr_y
-            self.position_center_y = lr_y
-            self.position_lr_y = center_y
-            if not self.start_game and self.player.center_y < self.position_center_y:
-                self.player.change_y = 0
-                self.start_game = True
-            else:
-                self.switch_level(3, -10)
+            if not self.start_game:
+                if self.player.center_y < self.position_center_y -3:
+                    self.player.change_y = 8
+                elif self.player.center_y > self.position_center_y +3:
+                    self.player.change_y = -8
+                else:
+                    self.player.change_y = 0
+
+                if self.player.center_x > SCREEN_WIDTH + 150:
+                    self.player.center_x = -150
+                    #self.player.change_x = 8
+
+                if self.player.center_x > self.position_center_x:
+                    self.player.change_x = 0
+                    self.start_game = True
+
+            self.switch_level(3, 10)
 
         elif self.current_room == 3:
-            if not self.start_game and self.player.center_y > self.position_center_y:
-                self.player.change_y = 0
-                self.start_game = True
-            else:
-                self.switch_level(4, -10)
+
+            if not self.start_game:
+                if self.player.center_x < self.position_center_x -3:
+                    self.player.change_x = 8
+                elif self.player.center_x > self.position_center_x +3:
+                    self.player.change_x = -8
+                else:
+                    self.player.change_x = 0
+
+                if self.player.center_y > SCREEN_HEIGHT + 150:
+                    self.player.center_y = -150
+
+                if self.player.center_y > self.position_lr_y:
+                    self.player.change_y = 0
+
+                if self.player.change_x == 0 and self.player.change_y == 0:
+                    center_y = self.position_center_y
+                    lr_y = self.position_lr_y
+                    self.position_center_y = lr_y
+                    self.position_lr_y = center_y
+                    self.start_game = True
+
+            self.switch_level(4, 0)
 
 
     def update(self, delta_time):
         """ Movement and game logic """
         self.physics_engine.update()
         self.check_if_change_level()
-
 
         if self.start_game:
             self.total_time += delta_time
@@ -473,10 +516,10 @@ class MyGame(arcade.Window):
                     self.remove_dirt('right')
                 else:
                     self.remove_dirt('center')
-            else:
+            """else:
                 self.player.set_texture(0)
                 if self.player.center_x == self.position_right_x:
-                    self.player.set_texture(5)
+                    self.player.set_texture(5)"""
 
 
 
