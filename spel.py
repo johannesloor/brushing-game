@@ -155,40 +155,17 @@ class MyGame(arcade.Window):
         self.rooms = []
 
         self.player = arcade.Sprite()
-        self.player.append_texture(arcade.load_texture("images/animation2-14.png", scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/animation3-14.png", scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/animation4-14.png", scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/animation3-14.png", scale=SPRITE_SCALING))
-        self.player.center_x = self.position_right_x
-        self.player.center_y = self.position_lr_y
-        self.player.set_texture(1)
-        self.player_list.append(self.player)
-
-        self.player = arcade.Sprite()
-        self.player.append_texture(arcade.load_texture("images/animation2-14.png", scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/animation3-14.png", scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/animation4-14.png", scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/animation3-14.png", scale=SPRITE_SCALING))
-        self.player.center_x = self.position_center_x
-        self.player.center_y = self.position_center_y
-        self.player.set_texture(0)
-        self.player_list.append(self.player)
-
-        self.player = arcade.Sprite()
+        self.player.append_texture(arcade.load_texture("images/animation1-14.png", mirrored=True, scale=SPRITE_SCALING))
         self.player.append_texture(arcade.load_texture("images/animation2-14.png", mirrored=True, scale=SPRITE_SCALING))
         self.player.append_texture(arcade.load_texture("images/animation3-14.png", mirrored=True, scale=SPRITE_SCALING))
         self.player.append_texture(arcade.load_texture("images/animation4-14.png", mirrored=True, scale=SPRITE_SCALING))
         self.player.append_texture(arcade.load_texture("images/animation3-14.png", mirrored=True, scale=SPRITE_SCALING))
-        self.player.center_x = self.position_left_x
-        self.player.center_y = self.position_lr_y
-        self.player.set_texture(0)
-        self.player_list.append(self.player)
 
-        self.player = arcade.Sprite()
-        self.player.append_texture(arcade.load_texture("images/animation2-14.png", mirrored=True, scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/animation3-14.png", mirrored=True, scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/animation4-14.png", mirrored=True, scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/animation3-14.png", mirrored=True, scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/animation1-14.png", scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/animation2-14.png", scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/animation3-14.png", scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/animation4-14.png", scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/animation3-14.png", scale=SPRITE_SCALING))
         self.player.center_x = self.position_center_x
         self.player.center_y = self.position_center_y
         self.player.set_texture(0)
@@ -203,7 +180,19 @@ class MyGame(arcade.Window):
         cord_right=[620, 770, 400, SCREEN_HEIGHT-20])
         self.rooms.append(room)
 
-        room = setup_level("images/stick.png","images/bglevel2.png",
+        room = setup_level("images/stick.png","images/bglevel3.png",
+        cord_left=[350, 480, 400, SCREEN_HEIGHT-20],
+        cord_center=[370, 730, 300, 400],
+        cord_right=[620, 770, 400, SCREEN_HEIGHT-20])
+        self.rooms.append(room)
+
+        room = setup_level("images/pinapple.png","images/bglevel4.png",
+        cord_left=[350, 480, 400, SCREEN_HEIGHT-20],
+        cord_center=[370, 730, 300, 400],
+        cord_right=[620, 770, 400, SCREEN_HEIGHT-20])
+        self.rooms.append(room)
+
+        room = setup_level("images/apple.png","images/bglevel2.png",
         cord_left=[350, 480, 400, SCREEN_HEIGHT-20],
         cord_center=[370, 730, 300, 400],
         cord_right=[620, 770, 400, SCREEN_HEIGHT-20])
@@ -226,8 +215,8 @@ class MyGame(arcade.Window):
         arcade.draw_texture_rectangle(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2,
                                       SCREEN_WIDTH, SCREEN_HEIGHT, self.rooms[self.current_room].background)
 
-        self.player_list[self.texture_choice].draw()
-
+        #self.player_list[self.texture_choice].draw()
+        self.player.draw()
         # Calculate minutes
         minutes = int(self.total_time) // 60
 
@@ -249,10 +238,6 @@ class MyGame(arcade.Window):
         left_dirt.draw()
         right_dirt.draw()
         center_dirt.draw()
-        if not left_dirt and not right_dirt and not center_dirt:
-            start_x = 440
-            start_y = 550
-            arcade.draw_text("All clean!", start_x, start_y, arcade.color.BLACK, 50)
 
         # Draw player
 
@@ -277,23 +262,23 @@ class MyGame(arcade.Window):
                 else:
                     self.current_room = 0
             if key == arcade.key.DOWN:
-                if self.texture_choice == 0:
-                    self.texture_choice = 1
-
-                elif self.texture_choice == 2:
-                    self.texture_choice = 3
-                #self.player.center_x = self.position_center_x
-                #self.player.center_y = self.position_center_y
+                self.player.center_x = self.position_center_x
+                self.player.center_y = self.position_center_y
                 #self.player.change_y = -MOVEMENT_SPEED
             if key == arcade.key.LEFT:
-                self.texture_choice = 2
-                #self.player.center_x = self.position_left_x
-                #self.player.center_y = self.position_lr_y
+                self.player.center_x = self.position_left_x
+                self.player.center_y = self.position_lr_y
+                self.texture_choice = 1
+
                 #self.player.change_x = -MOVEMENT_SPEED
             if key == arcade.key.RIGHT:
-                self.texture_choice = 0
-                #self.player.center_x = self.position_right_x
-                #self.player.center_y = self.position_lr_y
+                self.player.center_x = self.position_right_x
+                self.player.center_y = self.position_lr_y
+                self.texture_choice = 6
+
+            self.player.set_texture(self.texture_choice)
+
+
                 #self.player.change_x = MOVEMENT_SPEED
 
 
@@ -389,50 +374,109 @@ class MyGame(arcade.Window):
         """Fixed movement"""
         #y-axis -16000 to 16000
         if acc_Y_avg > 10000:
-            self.texture_choice = 0
+            self.player.center_x = self.position_left_x
+            self.player.center_y = self.position_lr_y
+            self.texture_choice = 1
         elif -5000 < acc_Y_avg < 5000:
-            if self.texture_choice == 0:
-                self.texture_choice = 1
-
-            elif self.texture_choice == 2:
-                self.texture_choice = 3
+            self.player.center_x = self.position_center_x
+            self.player.center_y = self.position_center_y
         elif acc_Y_avg < -10000:
-            self.texture_choice = 2
+            self.player.center_x = self.position_right_x
+            self.player.center_y = self.position_lr_y
+            self.texture_choice = 6
 
-    def animate_player(self, direction):
+        self.player.set_texture(self.texture_choice)
+
+    def animate_player(self):
         animation_framerate = 6
         animation_list = [0, animation_framerate, animation_framerate * 2, animation_framerate * 3]
-
         for frame in animation_list:
             if self.frame_timer == frame:
-                self.player_list[self.texture_choice].set_texture((self.frame_timer//animation_framerate))
+                self.player.set_texture(self.texture_choice + self.frame_timer//animation_framerate)
 
         max_timer = animation_list[-1] + animation_framerate
         if self.frame_timer < max_timer/2:
-            self.player_list[self.texture_choice].change_y = 2
+            self.player.change_y = 1
         else:
-            self.player_list[self.texture_choice].change_y = -2
+            self.player.change_y = -1
         self.frame_timer += 1
         if self.frame_timer == max_timer:
             self.frame_timer = 0
 
-        self.remove_dirt(direction)
+
+    def switch_level(self, next_level, speed):
+        left_dirt = self.rooms[self.current_room].dirt_left_list
+        right_dirt = self.rooms[self.current_room].dirt_right_list
+        center_dirt = self.rooms[self.current_room].dirt_center_list
+
+        if not left_dirt and not right_dirt and not center_dirt:
+            self.start_game = False
+            self.player.set_texture(0)
+            self.reset_timer('left')
+            self.reset_timer('right')
+            self.reset_timer('center')
+            self.player.change_y = speed
+
+            if self.player.center_y < - 150 or self.player.center_y > SCREEN_HEIGHT + 150:
+                self.player.change_y = -speed
+                self.current_room = next_level
+                self.player.center_x = self.position_center_x
+
+    def check_if_change_level(self):
+        if self.current_room == 0:
+            self.switch_level(1, 10)
+
+        elif self.current_room == 1:
+
+            if not self.start_game and self.player.center_y < self.position_center_y:
+                self.player.change_y = 0
+                self.start_game = True
+            else:
+                self.switch_level(2, 10)
+
+        elif self.current_room == 2:
+            center_y = self.position_center_y
+            lr_y = self.position_lr_y
+            self.position_center_y = lr_y
+            self.position_lr_y = center_y
+            if not self.start_game and self.player.center_y < self.position_center_y:
+                self.player.change_y = 0
+                self.start_game = True
+            else:
+                self.switch_level(3, -10)
+
+        elif self.current_room == 3:
+            if not self.start_game and self.player.center_y > self.position_center_y:
+                self.player.change_y = 0
+                self.start_game = True
+            else:
+                self.switch_level(4, -10)
+
 
     def update(self, delta_time):
         """ Movement and game logic """
+        self.physics_engine.update()
+        self.check_if_change_level()
+
+
         if self.start_game:
             self.total_time += delta_time
-            self.physics_engine.update()
-            self.player_list.update()
+
+            #self.player_list.update()
             if use_arduino:
                 self.on_acc_change()
             if not 150 < self.shake_value < 450:
-                if self.texture_choice == 0:
-                    self.animate_player("right")
-                if self.texture_choice == 1 or self.texture_choice == 3:
-                    self.animate_player("center")
-                if self.texture_choice == 2:
-                    self.animate_player("left")
+                self.animate_player()
+                if self.player.center_x == self.position_left_x:
+                    self.remove_dirt('left')
+                elif self.player.center_x == self.position_right_x:
+                    self.remove_dirt('right')
+                else:
+                    self.remove_dirt('center')
+            else:
+                self.player.set_texture(0)
+                if self.player.center_x == self.position_right_x:
+                    self.player.set_texture(5)
 
 
 
