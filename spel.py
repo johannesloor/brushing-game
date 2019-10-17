@@ -2,6 +2,7 @@ import arcade
 import os
 import time
 import random
+import statistics
 
 use_arduino = True
 if use_arduino:
@@ -128,13 +129,15 @@ class MyGame(arcade.Window):
 
         # Set up arduino data
         self.arduino_data = None
-        self.acc_Y_list = []
+        self.acc_Y_list = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
         self.acc_X_list = []
         self.acc_Z_list = []
+        self.force = 0
+        self.shake_value = 0
+        self.shake_value_list = []
 
         self.start_game = False
-        self.shake_value = 0
-        self.shake_value_list = [0]
+
 
         self.view_bottom = 0
         self.view_left = 0
@@ -187,25 +190,25 @@ class MyGame(arcade.Window):
 
 
         # Create the rooms. Extend the pattern for each room.
-        room = setup_level("images/dirt/stick.png","images/background/bana-1.png",
+        room = setup_level("images/dirt/apple.png","images/background/bana-1.png",
         cord_left=[350, 480, 400, SCREEN_HEIGHT-20],
         cord_center=[370, 730, 300, 400],
         cord_right=[620, 770, 400, SCREEN_HEIGHT-20])
         self.rooms.append(room)
 
-        room = setup_level("images/dirt/stick.png","images/background/bana-2.png",
+        room = setup_level("images/dirt/apple.png","images/background/bana-2.png",
         cord_left=[350, 480, 10, SCREEN_HEIGHT/2],
         cord_center=[370, 730, 300, 400],
         cord_right=[620, 770, 0, SCREEN_HEIGHT/2])
         self.rooms.append(room)
 
-        room = setup_level("images/dirt/stick.png","images/background/bana-3.png",
+        room = setup_level("images/dirt/apple.png","images/background/bana-3.png",
         cord_left=[350, 480, 10, SCREEN_HEIGHT/2],
         cord_center=[370, 730, 300, 400],
         cord_right=[620, 770, 0, SCREEN_HEIGHT/2])
         self.rooms.append(room)
 
-        room = setup_level("images/dirt/stick.png","images/background/bana-4.png",
+        room = setup_level("images/dirt/apple.png","images/background/bana-4.png",
         cord_left=[350, 480, 400, SCREEN_HEIGHT-20],
         cord_center=[370, 730, 300, 400],
         cord_right=[620, 770, 400, SCREEN_HEIGHT-20])
@@ -296,10 +299,6 @@ class MyGame(arcade.Window):
 
             self.player.set_texture(self.texture_choice)
 
-
-                #self.player.change_x = MOVEMENT_SPEED
-
-
     def add_to_timer(self, direction):
         if direction == "left":
             self.left_timer += 1
@@ -327,13 +326,6 @@ class MyGame(arcade.Window):
                     self.reset_timer(direction)
                     lists[x][0].kill()
 
-    def get_avg(self, list):
-        total = 0
-        for y in list:
-            total += y
-        avg = total//len(list)
-        return avg
-
     def on_acc_change(self):
         self.arduino_data = arduino.set_Arduino_data()
         x_gyr = self.arduino_data.gyr[0]
@@ -343,21 +335,31 @@ class MyGame(arcade.Window):
         x_acc = self.arduino_data.acc[0]
         y_acc = self.arduino_data.acc[1]
         z_acc = self.arduino_data.acc[2]
+
+        self.force = self.arduino_data.force
+
+
+        #print(force)
         #print("x:")
         #print(x_gyr)
         #print("y:")
         #print(y_gyr)
         #print("z:")
         #print(z_gyr)
-        if not self.acc_Y_list:
-            self.acc_Y_list.append(y_acc)
-        else:
-            self.acc_Y_list.insert(0, y_acc)
-            if len(self.acc_Y_list) > 20:
-                self.acc_Y_list.pop(-1)
-        acc_Y_avg = self.get_avg(self.acc_Y_list)
 
-        if not self.acc_X_list:
+        shake = (x_gyr + y_gyr + z_gyr)//3
+        self.shake_value_list.append(shake)
+        if len(self.shake_value_list) > 20:
+            self.shake_value_list.pop(0)
+        self.shake_value = statistics.mean(self.shake_value_list)
+
+        self.acc_Y_list.append(y_acc)
+        if len(self.acc_Y_list) > 15:
+            self.acc_Y_list.pop(0)
+        acc_Y_avg = statistics.mean(self.acc_Y_list)
+        #print(acc_Y_avg)
+
+        """if not self.acc_X_list:
             self.acc_X_list.append(x_acc)
         else:
             self.acc_X_list.insert(0, x_acc)
@@ -371,38 +373,22 @@ class MyGame(arcade.Window):
             self.acc_Z_list.insert(0, z_acc)
             if len(self.acc_Z_list) > 20:
                 self.acc_Z_list.pop(-1)
-        acc_Z_avg = self.get_avg(self.acc_Z_list)
-        """
-        print('x:')
-        print(acc_X_avg)
-        print()
-        print('z:')
-        print(acc_Z_avg)
-        print()
-        print('y:')
-        print(acc_Y_avg)
-        """
-        shake = (x_gyr + y_gyr + z_gyr)//3
-        self.shake_value_list.insert(0, shake)
-        if len(self.shake_value_list) > 20:
-            self.shake_value_list.pop(-1)
-
-        self.shake_value = self.get_avg(self.shake_value_list)
+        acc_Z_avg = self.get_avg(self.acc_Z_list)"""
 
         """Fixed movement"""
         #y-axis -16000 to 16000
-        if acc_Y_avg > 10000:
+        if acc_Y_avg > 10000 and self.player.center_x != self.position_left_x:
             self.player.center_x = self.position_left_x
             self.player.center_y = self.position_lr_y
             self.texture_choice = 1
-        elif -5000 < acc_Y_avg < 5000:
+        elif -5000 < acc_Y_avg < 5000 and self.player.center_x != self.position_center_x:
             self.player.center_x = self.position_center_x
             self.player.center_y = self.position_center_y
             if self.current_room == 1 or self.current_room == 2:
                 self.texture_choice = 11
             else:
                 self.texture_choice = 16
-        elif acc_Y_avg < -10000:
+        elif acc_Y_avg < -10000 and self.player.center_x != self.position_right_x:
             self.player.center_x = self.position_right_x
             self.player.center_y = self.position_lr_y
             self.texture_choice = 6
@@ -410,11 +396,14 @@ class MyGame(arcade.Window):
         self.player.set_texture(self.texture_choice)
 
     def animate_player(self):
-        animation_framerate = 4
+        animation_framerate = 1
         animation_list = [0, animation_framerate, animation_framerate * 2, animation_framerate * 3]
-        for frame in animation_list:
-            if self.frame_timer == frame:
-                self.player.set_texture(self.texture_choice + self.frame_timer//animation_framerate)
+        """for frame in animation_list:
+            if self.frame_timer == frame:"""
+        if self.texture_choice == 15:
+            self.texture_choice = 16
+
+        self.player.set_texture(self.texture_choice + self.frame_timer)
 
         max_timer = animation_list[-1] + animation_framerate
         if self.frame_timer < max_timer/2:
@@ -444,15 +433,16 @@ class MyGame(arcade.Window):
                 self.current_room = next_level
 
     def check_if_change_level(self):
+        speed = 4
         if self.current_room == 0:
-            self.switch_level(1, -8)
+            self.switch_level(1, -speed)
 
         elif self.current_room == 1:
             if not self.start_game:
                 if self.player.center_x < self.position_center_x -3:
-                    self.player.change_x = 8
+                    self.player.change_x = speed
                 elif self.player.center_x > self.position_center_x +3:
-                    self.player.change_x = -8
+                    self.player.change_x = -speed
                 else:
                     self.player.change_x = 0
 
@@ -470,14 +460,14 @@ class MyGame(arcade.Window):
                     self.position_lr_y = center_y
                     self.start_game = True
 
-            self.switch_level(2, 8)
+            self.switch_level(2, speed)
 
         elif self.current_room == 2:
             if not self.start_game:
 
                 if self.player.center_x > SCREEN_WIDTH + 135:
                     self.player.center_x = -135
-                    self.player.change_y = 8
+                    self.player.change_y = speed
 
                 elif self.player.center_x > self.position_center_x:
                     self.player.change_x = 0
@@ -488,15 +478,15 @@ class MyGame(arcade.Window):
                 if self.player.change_x == 0 and self.player.change_y == 0:
                     self.start_game = True
 
-            self.switch_level(3, 10)
+            self.switch_level(3, speed)
 
         elif self.current_room == 3:
 
             if not self.start_game:
                 if self.player.center_x < self.position_center_x -3:
-                    self.player.change_x = 8
+                    self.player.change_x = speed
                 elif self.player.center_x > self.position_center_x +3:
-                    self.player.change_x = -8
+                    self.player.change_x = -speed
                 else:
                     self.player.change_x = 0
 
@@ -518,23 +508,33 @@ class MyGame(arcade.Window):
         """ Movement and game logic """
         self.physics_engine.update()
         self.check_if_change_level()
+        self.player_list.update()
 
         if self.start_game:
+
             self.total_time += delta_time
 
-            #self.player_list.update()
+
             if use_arduino:
                 self.on_acc_change()
-                
-            if not 150 < self.shake_value < 450:
+            print(self.shake_value)
+            if self.force > 1000 and not 330 < self.shake_value < 370:
                 self.animate_player()
+
                 if self.player.center_x == self.position_left_x:
                     self.remove_dirt('left')
                 elif self.player.center_x == self.position_right_x:
                     self.remove_dirt('right')
                 else:
                     self.remove_dirt('center')
-
+            else:
+                self.player.change_y = 0
+                if self.player.center_x == self.position_left_x:
+                    self.player.set_texture(0)
+                elif self.player.center_x == self.position_right_x:
+                    self.player.set_texture(5)
+                else:
+                    self.player.set_texture(15)
 
 
 def main():
