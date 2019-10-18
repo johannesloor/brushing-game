@@ -4,7 +4,7 @@ import time
 import random
 import statistics
 
-use_arduino = False
+use_arduino = True
 if use_arduino:
     import arduino
 
@@ -160,29 +160,33 @@ class MyGame(arcade.Window):
         #self.player = Player()
 
         self.player = arcade.Sprite()
-        self.player.append_texture(arcade.load_texture("images/player/animation1-14.png", mirrored=True, scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/player/animation2-14.png", mirrored=True, scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/player/animation3-14.png", mirrored=True, scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/player/animation4-14.png", mirrored=True, scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/player/animation3-14.png", mirrored=True, scale=SPRITE_SCALING))
+        #Facing Right
+        self.player.append_texture(arcade.load_texture("images/player/left/0.png", mirrored=True, scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/player/left/1.png", mirrored=True, scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/player/left/2.png", mirrored=True, scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/player/left/3.png", mirrored=True, scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/player/left/2.png", mirrored=True, scale=SPRITE_SCALING))
 
-        self.player.append_texture(arcade.load_texture("images/player/animation1-14.png", scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/player/animation2-14.png", scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/player/animation3-14.png", scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/player/animation4-14.png", scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/player/animation3-14.png", scale=SPRITE_SCALING))
+        #Facin left
+        self.player.append_texture(arcade.load_texture("images/player/left/0.png", scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/player/left/1.png", scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/player/left/2.png", scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/player/left/3.png", scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/player/left/2.png", scale=SPRITE_SCALING))
 
-        self.player.append_texture(arcade.load_texture("images/player/down0.png", scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/player/down1.png", scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/player/down2.png", scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/player/down3.png", scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/player/down2.png", scale=SPRITE_SCALING))
+        #Up
+        self.player.append_texture(arcade.load_texture("images/player/down/down0.png", scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/player/down/down1.png", scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/player/down/down2.png", scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/player/down/down3.png", scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/player/down/down2.png", scale=SPRITE_SCALING))
 
-        self.player.append_texture(arcade.load_texture("images/player/up0.png", scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/player/up1.png", scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/player/up2.png", scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/player/up3.png", scale=SPRITE_SCALING))
-        self.player.append_texture(arcade.load_texture("images/player/up2.png", scale=SPRITE_SCALING))
+        #Down
+        self.player.append_texture(arcade.load_texture("images/player/up/up0.png", scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/player/up/up1.png", scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/player/up/up2.png", scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/player/up/up3.png", scale=SPRITE_SCALING))
+        self.player.append_texture(arcade.load_texture("images/player/up/up2.png", scale=SPRITE_SCALING))
         self.player.center_x = self.position_center_x
         self.player.center_y = self.position_center_y
         self.player.set_texture(15)
@@ -398,13 +402,19 @@ class MyGame(arcade.Window):
 
         """Fixed movement"""
         #y-axis -16000 to 16000
-        if acc_Y_avg > 10000 and self.player.center_x != self.position_left_x:
-            if test_mode:
-                self.player.center_x = self.position_right_x
-            else:
-                self.player.center_x = self.position_left_x
-            self.player.center_y = self.position_lr_y
+        #left = None
+        #right = None
+        left = self.position_left_x
+        right = self.position_right_x
+        if test_mode:
+            left = self.position_right_x
+            right = self.position_left_x            
+
+        if acc_Y_avg > 10000 and self.player.center_x != left:
+            self.player.center_x = self.position_left_x
             self.texture_choice = 1
+            self.player.center_y = self.position_lr_y
+
         elif -5000 < acc_Y_avg < 5000 and self.player.center_x != self.position_center_x:
             self.player.center_x = self.position_center_x
             self.player.center_y = self.position_center_y
@@ -412,13 +422,11 @@ class MyGame(arcade.Window):
                 self.texture_choice = 16
             else:
                 self.texture_choice = 11
-        elif acc_Y_avg < -10000 and self.player.center_x != self.position_right_x:
-            if test_mode:
-                self.player.center_x = self.position_left_x
-            else:
-                self.player.center_x = self.position_right_x
-            self.player.center_y = self.position_lr_y
+
+        elif acc_Y_avg < -10000 and self.player.center_x != right:
+            self.player.center_x = self.position_right_x
             self.texture_choice = 6
+            self.player.center_y = self.position_lr_y
 
         self.player.set_texture(self.texture_choice)
 
