@@ -4,7 +4,7 @@ import time
 import random
 import statistics
 
-use_arduino = True
+use_arduino = False
 if use_arduino:
     import arduino
 
@@ -15,8 +15,9 @@ SPRITE_NATIVE_SIZE = 128
 SPRITE_SIZE = int(SPRITE_NATIVE_SIZE * SPRITE_SCALING)
 
 DIRT_COUNT = 1 #30
-SCREEN_WIDTH = 1200
-SCREEN_HEIGHT = 700
+DIRT_SCALING = 0.45
+SCREEN_WIDTH = 2638*0.45 #1200
+SCREEN_HEIGHT = 1664*0.45#700
 SCREEN_TITLE = "BRUSHI"
 
 MOVEMENT_SPEED = 20
@@ -37,7 +38,7 @@ class Room:
         self.background = None
 
 
-def setup_level(dirt, background, dirt_count, cord_left, cord_center, cord_right):
+def setup_level(dirt_left, dirt_center, dirt_right, background, dirt_count, cord_left, cord_center, cord_right):
     """
     Create and return room 1.
     If your program gets large, you may want to separate this into different
@@ -67,20 +68,28 @@ def setup_level(dirt, background, dirt_count, cord_left, cord_center, cord_right
         for i in range(dirt_count):
 
             # Create the coin instance
-            # Coin image from kenney.nl
-            dirt_left = arcade.Sprite(dirt, SPRITE_SCALING)
-            dirt_center_list = arcade.Sprite(dirt, SPRITE_SCALING)
-            dirt_right_list = arcade.Sprite(dirt, SPRITE_SCALING)
+            dirt_left = arcade.Sprite(dirt_left, DIRT_SCALING)
+            dirt_center_list = arcade.Sprite(dirt_center, DIRT_SCALING)
+            dirt_right_list = arcade.Sprite(dirt_right, DIRT_SCALING)
 
-            # Position the coin
-            dirt_left.center_x = random.randrange(cord_left[0], cord_left[1])
+            # Position the dirt
+            dirt_left.center_x = cord_left[0]
+            dirt_left.center_y = cord_left[1]
+
+            dirt_center_list.center_x = cord_center[0]
+            dirt_center_list.center_y = cord_center[1]
+
+            dirt_right_list.center_x = cord_right[0]
+            dirt_right_list.center_y = cord_right[1]
+
+            """dirt_left.center_x = random.randrange(cord_left[0], cord_left[1])
             dirt_left.center_y = random.randrange(cord_left[2], cord_left[3])
 
             dirt_center_list.center_x = random.randrange(cord_center[0], cord_center[1])
             dirt_center_list.center_y = random.randrange(cord_center[2], cord_center[3])
 
             dirt_right_list.center_x = random.randrange(cord_right[0], cord_right[1])
-            dirt_right_list.center_y = random.randrange(cord_right[2], cord_right[3])
+            dirt_right_list.center_y = random.randrange(cord_right[2], cord_right[3])"""
 
             # Add the coin to the lists
             room.dirt_left_list.append(dirt_left)
@@ -125,11 +134,11 @@ class MyGame(arcade.Window):
         self.player = None
         self.player_list = None
         self.physics_engine = None
-        self.position_center_x = 550
-        self.position_center_y = 160
-        self.position_left_x = 200
-        self.position_right_x = 900
-        self.position_lr_y = SCREEN_HEIGHT*0.7
+        self.position_center_x = 600
+        self.position_center_y = 120
+        self.position_left_x = 280
+        self.position_right_x = 950
+        self.position_lr_y = 460
 
         # Set up arduino data
         self.arduino_data = None
@@ -141,7 +150,7 @@ class MyGame(arcade.Window):
         self.shake_value_list = []
 
         self.start_game = False
-
+        self.playing_song = False
 
         self.view_bottom = 0
         self.view_left = 0
@@ -155,6 +164,7 @@ class MyGame(arcade.Window):
 
     def setup(self):
         """ Set up the game and initialize the variables. """
+        self.song = arcade.Sound("Funky_Space_Princess.wav")
         # Set up the player
         self.player_list = arcade.SpriteList()
         #self.player = Player()
@@ -196,7 +206,7 @@ class MyGame(arcade.Window):
         self.rooms = []
 
         #Start page
-        room = setup_level("","images/background/i-mun.png",0,
+        room = setup_level("","","","images/background/i-mun.png",0,
         cord_left = 0,
         cord_center = 0,
         cord_right = 0)
@@ -206,28 +216,28 @@ class MyGame(arcade.Window):
         self.rooms.append(room)
 
         # Create the rooms. Extend the pattern for each room.
-        room = setup_level("images/dirt/apple.png","images/background/bana-1.png",DIRT_COUNT,
-        cord_left=[350, 480, 400, SCREEN_HEIGHT-20],
-        cord_center=[370, 730, 300, 400],
-        cord_right=[620, 770, 400, SCREEN_HEIGHT-20])
+        room = setup_level("images/dirt/level1/blåslime1.png","images/dirt/level1/rosaslime1.png","images/dirt/level1/grönslime1.png","images/background/level1.png",DIRT_COUNT,
+        cord_left=[590, 373],
+        cord_center=[550, 300],
+        cord_right=[700, 500])
         self.rooms.append(room)
 
-        room = setup_level("images/dirt/apple.png","images/background/bana-2.png",DIRT_COUNT,
-        cord_left=[350, 480, 10, SCREEN_HEIGHT/2],
-        cord_center=[370, 730, 300, 400],
-        cord_right=[620, 770, 0, SCREEN_HEIGHT/2])
+        room = setup_level("images/dirt/apple.png","images/dirt/apple.png","images/dirt/apple.png","images/background/level2.png",DIRT_COUNT,
+        cord_left=[350, SCREEN_HEIGHT/2],
+        cord_center=[370, 400],
+        cord_right=[620, SCREEN_HEIGHT/2])
         self.rooms.append(room)
 
-        room = setup_level("images/dirt/apple.png","images/background/bana-3.png",DIRT_COUNT,
-        cord_left=[350, 480, 10, SCREEN_HEIGHT/2],
-        cord_center=[370, 730, 300, 400],
-        cord_right=[620, 770, 0, SCREEN_HEIGHT/2])
+        room = setup_level("images/dirt/apple.png","images/dirt/apple.png","images/dirt/apple.png","images/background/level3.png",DIRT_COUNT,
+        cord_left=[350, SCREEN_HEIGHT/2],
+        cord_center=[370, 400],
+        cord_right=[620, SCREEN_HEIGHT/2])
         self.rooms.append(room)
 
-        room = setup_level("images/dirt/apple.png","images/background/bana-4.png",DIRT_COUNT,
-        cord_left=[350, 480, 400, SCREEN_HEIGHT-20],
-        cord_center=[370, 730, 300, 400],
-        cord_right=[620, 770, 400, SCREEN_HEIGHT-20])
+        room = setup_level("images/dirt/apple.png","images/dirt/apple.png","images/dirt/apple.png","images/background/level4.png",DIRT_COUNT,
+        cord_left=[400, 500],
+        cord_center=[550, 300],
+        cord_right=[700, 500])
         self.rooms.append(room)
 
         # Our starting room number
@@ -249,6 +259,14 @@ class MyGame(arcade.Window):
 
         #self.player_list[self.texture_choice].draw()
 
+        # Draw dirt
+        left_dirt = self.rooms[self.current_room].dirt_left_list
+        right_dirt = self.rooms[self.current_room].dirt_right_list
+        center_dirt = self.rooms[self.current_room].dirt_center_list
+
+        left_dirt.draw()
+        right_dirt.draw()
+        center_dirt.draw()
 
         if self.current_room > 0:
             self.player.draw()
@@ -262,17 +280,10 @@ class MyGame(arcade.Window):
             output = f"Time: {minutes:02d}:{seconds:02d}"
 
             # Output the timer text.
-            arcade.draw_text(output, 50, SCREEN_HEIGHT-50, arcade.color.BLACK, 30)
+            arcade.draw_text(output, 50, SCREEN_HEIGHT-50, arcade.color.WHITE, 30)
 
 
-        # Draw dirt
-        left_dirt = self.rooms[self.current_room].dirt_left_list
-        right_dirt = self.rooms[self.current_room].dirt_right_list
-        center_dirt = self.rooms[self.current_room].dirt_center_list
 
-        left_dirt.draw()
-        right_dirt.draw()
-        center_dirt.draw()
 
         # Draw logo
         if self.current_room==0:
@@ -348,7 +359,7 @@ class MyGame(arcade.Window):
                 if timers[x] == remove_dirt_frame:
                     self.reset_timer(direction)
                     lists[x][0].alpha -= 5
-                    if lists[x][0].alpha < 0:
+                    if lists[x][0].alpha < 5:
                         lists[x][0].kill()
 
     def on_acc_change(self):
@@ -408,7 +419,7 @@ class MyGame(arcade.Window):
         right = self.position_right_x
         if test_mode:
             left = self.position_right_x
-            right = self.position_left_x            
+            right = self.position_left_x
 
         if acc_Y_avg > 10000 and self.player.center_x != left:
             self.player.center_x = self.position_left_x
@@ -461,7 +472,7 @@ class MyGame(arcade.Window):
             self.reset_timer('right')
             self.reset_timer('center')
             if next_level == 3:
-                self.player.set_texture(0)
+                self.player.set_texture(1)
                 self.player.change_x = speed
                 self.player.change_y = 0
             else:
@@ -521,8 +532,8 @@ class MyGame(arcade.Window):
                     self.player.change_y = 0
 
                 if self.player.change_x == 0 and self.player.change_y == 0:
-                    self.position_center_y = SCREEN_HEIGHT*0.7
-                    self.position_lr_y = 160
+                    self.position_center_y = self.position_center_y
+                    self.position_lr_y = self.position_lr_y
                     self.start_game = True
 
             self.switch_level(4, speed)
@@ -559,8 +570,12 @@ class MyGame(arcade.Window):
         force = -1
 
         if self.start_game:
+            if not self.playing_song:
+                self.song.play()
+                self.playing_song = True
             if self.current_room == 0:
                 self.current_room = 1
+
 
             self.total_time += delta_time
 
