@@ -554,10 +554,6 @@ class MyGame(arcade.Window):
                 self.player.change_x = 0
                 self.player.change_y = speed
 
-            if next_level == 0:
-                pygame.mixer.music.pause()
-                self.playing_song = False
-
             if self.player.center_y < - 135 or self.player.center_y > SCREEN_HEIGHT + 135 or self.player.center_x > SCREEN_WIDTH + 150:
                 self.current_room = next_level
 
@@ -649,6 +645,8 @@ class MyGame(arcade.Window):
 
         if self.current_room == self.done:
             time.sleep(3)
+            pygame.mixer.music.pause()
+            self.playing_song = False
             self.setup()
             self.total_time = 0
 
