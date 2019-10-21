@@ -9,7 +9,7 @@ use_arduino = True
 if use_arduino:
     import arduino
 
-test_mode = False
+test_mode = True
 
 SPRITE_SCALING = 0.1
 SPRITE_NATIVE_SIZE = 128
@@ -232,9 +232,6 @@ class MyGame(arcade.Window):
         cord_left = 0,
         cord_center = 0,
         cord_right = 0)
-        room.logo = arcade.Sprite("images/logo-1.png", 0.2)
-        room.logo.center_x = SCREEN_WIDTH/2
-        room.logo.center_y = SCREEN_HEIGHT-130#/2 +100
         self.rooms.append(room)
 
         #Intro
@@ -244,25 +241,25 @@ class MyGame(arcade.Window):
         cord_right = 0)
         self.rooms.append(room)
 
-        room = setup_level("","","","images/background/levels.png",0,1,
+        room = setup_level("","","","images/background/mouth_1.png",0,1,
         cord_left = 0,
         cord_center = 0,
         cord_right = 0)
         self.rooms.append(room)
 
-        room = setup_level("","","","images/background/levels.png",0,1,
+        room = setup_level("","","","images/background/mouth_2.png",0,1,
         cord_left = 0,
         cord_center = 0,
         cord_right = 0)
         self.rooms.append(room)
 
-        room = setup_level("","","","images/background/levels.png",0,1,
+        room = setup_level("","","","images/background/mouth_3.png",0,1,
         cord_left = 0,
         cord_center = 0,
         cord_right = 0)
         self.rooms.append(room)
 
-        room = setup_level("","","","images/background/levels.png",0,1,
+        room = setup_level("","","","images/background/mouth_4.png",0,1,
         cord_left = 0,
         cord_center = 0,
         cord_right = 0)
@@ -273,24 +270,36 @@ class MyGame(arcade.Window):
         cord_left=[589, 373],
         cord_center=[590, 373],
         cord_right=[592, 373])
+        room.logo = arcade.Sprite("images/background/numbers-1.png", 0.2)
+        room.logo.center_x = SCREEN_WIDTH - 100
+        room.logo.center_y = SCREEN_HEIGHT - 100
         self.rooms.append(room)
 
         room = setup_level("images/dirt/hamburgare.png","images/dirt/hamburgare.png","images/dirt/hamburgare.png","images/background/level2.png",DIRT_COUNT,0.08,
         cord_left=[480, 220],
         cord_center=[770, 465],
         cord_right=[880, 300])
+        room.logo = arcade.Sprite("images/background/numbers-2.png", 0.2)
+        room.logo.center_x = SCREEN_WIDTH - 100
+        room.logo.center_y = SCREEN_HEIGHT - 100
         self.rooms.append(room)
 
         room = setup_level("images/dirt/cupcake.png","images/dirt/cupcake.png","images/dirt/cupcake.png","images/background/level3.png",DIRT_COUNT,0.1,
         cord_left=[320, 320],
         cord_center=[450, 503],
         cord_right=[680, 270])
+        room.logo = arcade.Sprite("images/background/numbers-3.png", 0.2)
+        room.logo.center_x = SCREEN_WIDTH - 100
+        room.logo.center_y = SCREEN_HEIGHT - 100
         self.rooms.append(room)
 
         room = setup_level("images/dirt/apple.png","images/dirt/apple.png","images/dirt/apple.png","images/background/level4.png",DIRT_COUNT,0.1,
         cord_left=[350, 320],
         cord_center=[550, 300],
         cord_right=[730, 500])
+        room.logo = arcade.Sprite("images/background/numbers-4.png", 0.2)
+        room.logo.center_x = SCREEN_WIDTH - 100
+        room.logo.center_y = SCREEN_HEIGHT - 100
         self.rooms.append(room)
 
         room = setup_level("","","","images/background/clean-mouth.png",0,1,
@@ -353,10 +362,10 @@ class MyGame(arcade.Window):
 
 
 
-        """# Draw logo
-        if self.current_room==start_screen:
-            logo = self.rooms[start_screen].logo
-            logo.draw()"""
+        # Draw numbers
+        if self.current_room >= self.level1 and self.current_room <= self.level4:
+            logo = self.rooms[self.current_room].logo
+            logo.draw()
 
 
 
@@ -426,7 +435,7 @@ class MyGame(arcade.Window):
             if lists[x]:
                 if timers[x] == remove_dirt_frame:
                     self.reset_timer(direction)
-                    lists[x][0].alpha -= 5
+                    lists[x][0].alpha -= 7
                     if lists[x][0].alpha < 5:
                         lists[x][0].kill()
 
@@ -490,8 +499,11 @@ class MyGame(arcade.Window):
             right = self.position_left_x
 
         if acc_Y_avg > 10000 and self.player.center_x != left:
-            self.player.center_x = self.position_left_x
-            self.texture_choice = 1
+            self.player.center_x = left
+            if test_mode:
+                self.texture_choice = 6
+            else:
+                self.texture_choice = 1
             self.player.center_y = self.position_lr_y
 
         elif -5000 < acc_Y_avg < 5000 and self.player.center_x != self.position_center_x:
@@ -503,8 +515,11 @@ class MyGame(arcade.Window):
                 self.texture_choice = 11
 
         elif acc_Y_avg < -10000 and self.player.center_x != right:
-            self.player.center_x = self.position_right_x
-            self.texture_choice = 6
+            if test_mode:
+                self.texture_choice = 1
+            else:
+                self.texture_choice = 6
+            self.player.center_x = right
             self.player.center_y = self.position_lr_y
 
         self.player.set_texture(self.texture_choice)
@@ -562,6 +577,8 @@ class MyGame(arcade.Window):
 
             elif self.current_room == self.level4 and self.player.center_y > SCREEN_HEIGHT + 120:
                 self.current_room = next_level
+                self.player.change_y = 0
+                self.player.center_y = SCREEN_HEIGHT + 135
 
 
     def check_if_change_level(self):
@@ -647,7 +664,7 @@ class MyGame(arcade.Window):
         force = -1
 
         if self.current_room == self.done:
-            time.sleep(3)
+            time.sleep(4)
             pygame.mixer.music.pause()
             self.playing_song = False
             self.setup()
@@ -690,16 +707,16 @@ class MyGame(arcade.Window):
                 self.current_room = self.intro1
             elif self.current_room == self.intro1:
                 self.current_room = self.intro2
-                time.sleep(3)
+                time.sleep(1)
             elif self.current_room == self.intro2:
                 self.current_room = self.intro3
-                time.sleep(1)
+                time.sleep(0.5)
             elif self.current_room == self.intro3:
                 self.current_room = self.intro4
-                time.sleep(1)
+                time.sleep(0.5)
             elif self.current_room == self.intro4:
                 self.current_room = self.intro5
-                time.sleep(1)
+                time.sleep(0.5)
             elif self.current_room == self.intro5:
                 self.current_room = self.level1
                 self.start_game = True
