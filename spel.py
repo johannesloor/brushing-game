@@ -5,7 +5,7 @@ import random
 import statistics
 import pygame
 
-use_arduino = False
+use_arduino = True
 if use_arduino:
     import arduino
 
@@ -510,9 +510,12 @@ class MyGame(arcade.Window):
         self.player.set_texture(self.texture_choice)
 
     def animate_glitter(self):
-        self.glitter.set_texture(self.glitter_count)
+        if self.glitter_count == 0:
+            self.glitter.set_texture(self.glitter_count)
+        elif self.glitter_count == 5:
+            self.glitter.set_texture(self.glitter_count -4)
         self.glitter_count += 1
-        if self.glitter_count > 1:
+        if self.glitter_count > 9:
             self.glitter_count = 0
 
     def animate_player(self):
